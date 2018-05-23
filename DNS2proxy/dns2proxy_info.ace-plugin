@@ -1,0 +1,8 @@
+[Core]
+Name = DNS2proxy
+Module = dns2proxy_view
+
+[Documentation]
+Author = a5hish
+Version = 1.0
+Description = Offensive DNS server using dns2proxy.

@@ -1,0 +1,8 @@
+[Core]
+Name = DatetimeBanner
+Module = dtbanner_view
+
+[Documentation]
+Author = ashish
+Version = 1.0
+Description = display datetime in as a banner

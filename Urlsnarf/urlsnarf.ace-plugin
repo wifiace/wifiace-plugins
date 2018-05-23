@@ -1,0 +1,8 @@
+[Core]
+Name = Urlsnarf
+Module = urlsnarf_v
+
+[Documentation]
+Author = 4bh1
+Version = 1.0
+Description = Sniff HTTP requests in Common Log Format

@@ -1,0 +1,8 @@
+[Core]
+Name = Tshark
+Module = tshark_view
+
+[Documentation]
+Author = ashish
+Version = 1.0
+Description = Captures Packets on an interface using tshark-util.

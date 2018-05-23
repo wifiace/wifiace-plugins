@@ -1,0 +1,24 @@
+[DatetimeBanner]
+author = a5hish
+version = 1.0
+description = display datetime in as a banner
+
+[Tshark]
+Author = a5hish
+Version = 1.0
+Description = Captures Packets on an interface using tshark-util.
+
+[DNS2proxy]
+Author = a5hish
+Version = 1.0
+Description = Offensive DNS server using dns2proxy.
+
+[Urlsnarf]
+Author = 4bh1
+Version = 1.0
+Description = Sniff HTTP requests in Common Log Format.
+
+[SSLstrip2]
+Author = a5hish
+Version = 1.0
+Description = SSLStrip version to defeat HTTPS.

@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+{% block title %} Tshark {% endblock %}
+
+{% block head %}
+<script>
+  function download_pcap(file_name){
+    window.location = document.URL + "download/" + file_name;
+  }
+
+  function delete_pcap(file_name){
+    window.location = document.URL + "delete/" + file_name;
+  }
+
+  $(document).ready(function(){
+
+    $('#start-tshark').click(function(){
+      var iface = $('#select-iface').val();
+      window.location = document.URL + "start_tshark?iface=" + iface;
+    });
+
+    $('#stop-tshark').click(function(){
+      window.location = document.URL + "stop_tshark";
+    });
+
+  });
+
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h1>Tshark</h1>
+</div>
+
+<div class="col-lg-4">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Controle:</h3>
+    </div>
+    <div class="panel-body">
+      <label>tshark : </label>
+      {% if status["pid"] == -1 %}
+        <span class="text-danger">not running</span>
+        <br><br>
+
+        <div class="input-group">
+          <span class="input-group-addon" >Select Interface to start on </span>
+          <select class="form-control" id="select-iface" >
+            {% for iface in status['interfaces'] %}
+              <option value="{{ iface }}">{{ iface }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <br><br>
+        <button type="button" class="btn btn-success btn-block" id="start-tshark" >Start</button>
+
+      {% else %}
+        <span class="text-info">{{ status["pid"] }}</span>
+        <br><br>
+        <button type="button" class="btn btn-danger btn-block" id="stop-tshark" >Stop</button>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<div class="col-lg-12">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">History <span class="badge">{{ status["history_list"]|length }}</span> </h3>
+    </div>
+    <div class="panel-body">
+      <table class="table">
+        <thead>
+          <th>File Name</th>
+          <th>Action</th>
+        </thead>
+
+        <tbody>
+          {% if status["history_list"] %}
+            {% for file_name in status["history_list"] %}
+              <tr>
+                <td>{{ file_name }}</td>
+                <td>
+                  <button onclick="download_pcap('{{ file_name }}')" type="button" class="btn btn-info" >Download</button>
+                  <button onclick="delete_pcap('{{ file_name }}')" type="button" class="btn btn-danger" >Delete</button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

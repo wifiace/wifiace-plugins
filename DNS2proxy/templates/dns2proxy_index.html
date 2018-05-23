@@ -1,0 +1,225 @@
+{% extends "layout.html" %}
+{% block title %} Tshark {% endblock %}
+
+{% block head %}
+<script>
+
+$(document).ready(function(){
+
+  var timerMilliSec = 10000;
+
+  function loadLog(file_name, textbox_id){
+    $.ajax({
+    url: document.URL + 'fetchfiles/' + file_name,
+    type: 'GET',
+
+    success: function(response) {
+        $(textbox_id).val(response["message"]);
+
+        setTimeout(function(){
+          loadLog(file_name, textbox_id);
+        }, timerMilliSec);
+        console.log("logs for : " + file_name + ": timerMilliSec : " + timerMilliSec);
+    },
+    error: function(error) {
+        console.log(error);
+    }
+    });
+
+  }
+
+  loadLog("output.log", "#logs");
+
+  $('#start').click(function(){
+    var iface = $('#select-iface').val();
+    window.location = document.URL + "start?iface=" + iface;
+  });
+
+  $('#stop').click(function(){
+    window.location = document.URL + "stop";
+  });
+
+
+  $('#edit-file-model').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget)
+    var file_name = $(button).closest('tr').find('td:eq(0)').text();
+
+    var modal = $(this)
+    $('#file-name').val(file_name);
+
+    $.ajax({
+    url: document.URL + 'fetchfiles/'+file_name,
+    type: 'GET',
+
+    success: function(response) {
+        $("#file-text").val(response["message"]);
+        console.log(response);
+    },
+    error: function(error) {
+        console.log(error);
+    }
+    });
+
+  });
+
+  $('#edit-file-model').on('hide.bs.modal', function (event) {
+    $('#edit-msg').html('');
+  });
+
+  $('#save').click(function(){
+    var file_name = $('#file-name').val();
+    var file_text = $('#file-text').val();
+
+    $.ajax({
+    url: document.URL + 'writefile',
+    data: {file_name:file_name, file_text:file_text},
+    type: 'POST',
+    beforeSend: function(){
+      $('#save').attr('disabled','disabled');
+    },
+    complete: function(){
+      $('#save').removeAttr('disabled');
+    },
+    success: function(response) {
+        $('#edit-msg').html('<div class="alert alert-success" role="alert">{message}</div>'.formatUnicorn({message:response['message']}));
+        console.log(response);
+    },
+    error: function(error) {
+        $('#edit-msg').html('<div class="alert alert-warning" role="alert">{message}</div>'.formatUnicorn({message:error.responseJSON["message"]}));
+        console.log(error);
+    }
+    });
+
+
+  });
+
+});
+
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h1>DNS2proxy</h1>
+</div>
+
+<div class="col-lg-4">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Controle:</h3>
+    </div>
+    <div class="panel-body">
+      <label>dns2proxy : </label>
+      {% if status["pid"] == -1 %}
+        <span class="text-danger">not running</span>
+        <br><br>
+
+        <div class="input-group">
+          <span class="input-group-addon" >Select Interface to start on </span>
+          <select class="form-control" id="select-iface" >
+            {% for iface in status['interfaces'] %}
+              <option value="{{ iface }}">{{ iface }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <br><br>
+
+        <button type="button" class="btn btn-success btn-block" id="start" >Start</button>
+      {% else %}
+        <span class="text-info">{{ status["pid"] }}</span>
+        <br><br>
+        <button type="button" class="btn btn-danger btn-block" id="stop" >Stop</button>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% if status["pid"] == -1 %}
+<div class="col-lg-12">
+  <div class="panel panel-default" id="config-panel" >
+    <div class="panel-heading">
+      <h3 class="panel-title">Configure DNS2proxy</h3>
+    </div>
+    <div class="panel-body">
+      <table class="table table-striped">
+        <thead>
+          <th>File Name</th>
+          <th>Description</th>
+          <th>Edit</th>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>spoof.cfg</td>
+            <td>Mention the doamin with the destination IP address at which you want to redirect the traffic.</td>
+            <td> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#edit-file-model" >Edit</button></td>
+          </tr>
+
+          <tr>
+            <td>domains.cfg</td>
+            <td>Same as spoof but used to target subdomains. </td>
+            <td> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#edit-file-model" >Edit</button></td>
+          </tr>
+
+          <tr>
+            <td>nospoof.cfg</td>
+            <td>Mentioned domains would not be spoofed by dns2proxy.</td>
+            <td> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#edit-file-model" >Edit</button></td>
+          </tr>
+
+          <tr>
+            <td>victims.cfg</td>
+            <td>Used to target selected victims based on their IP..</td>
+            <td> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#edit-file-model" >Edit</button></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="col-lg-12">
+
+    <div class="panel panel-default" id="log-panel">
+      <div class="panel-heading">
+        <h3 class="panel-title">Logs</h3>
+      </div>
+      <div class="panel-body">
+        <textarea class="form-control" id="logs" rows="15" readonly></textarea>
+      </div>
+    </div>
+
+</div>
+{% endif %}
+
+<!-- Modal -->
+<div class="modal fade" id="edit-file-model" tabindex="-1" role="dialog" aria-labelledby="edit-file-label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="edit-file-label">Edit File</h4>
+      </div>
+      <div class="modal-body">
+        <div id="edit-msg"></div>
+
+        <div class="form-group">
+          <div class="input-group">
+            <span class="input-group-addon"> <i class="glyphicon glyphicon-file" aria-hidden="true"></i> </span>
+            <input id="file-name" class="form-control" type="text"  value="File Name" readonly>
+          </div>
+          <br>
+          <label>File Contents:</label>
+          <textarea id="file-text" class="form-control input-sm" rows="8"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="save">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

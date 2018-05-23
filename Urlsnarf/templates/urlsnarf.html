@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+{% block title %} URLsnarf {% endblock %}
+
+{% block head %}
+<script type="text/javascript">
+  $(document).ready(function(){
+
+    $('#start-urlnsnarf').click(function(){
+      var iface = $('#select-iface').val();
+      window.location = document.URL + "start_urlsnarf?iface=" + iface;
+    });
+
+    $('#stop-urlnsnarf').click(function(){
+      window.location = document.URL + "stop_urlsnarf";
+    });
+
+  });
+  function download_log(file_name){
+    window.location = document.URL + "download/" + file_name;
+  }
+
+  function delete_log(file_name){
+    window.location = document.URL + "delete/" + file_name;
+  }
+
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h1>URLsnarf</h1>
+</div>
+<div class="col-lg-4">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Status:</h3>
+    </div>
+    <div class="panel-body">
+      <label>URLsnarf : </label>
+      {% if status["pid"] == -1 %}
+        <span class="text-danger">not running</span>
+        <br><br>
+
+        <div class="input-group">
+          <span class="input-group-addon" >Select Interface to start on </span>
+          <select class="form-control" id="select-iface" >
+            {% for iface in status['interfaces'] %}
+              <option value="{{ iface }}">{{ iface }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <br><br>
+        <button type="button" class="btn btn-success btn-block" id="start-urlnsnarf" >Start</button>
+
+      {% else %}
+        <span class="text-info">{{ status["pid"] }}</span>
+        <br><br>
+        <button type="button" class="btn btn-danger btn-block" id="stop-urlnsnarf" >Stop</button>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+<div class="col-lg-12">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">History <span class="badge">{{ status["logs"]|length }}</span> </h3>
+    </div>
+    <div class="panel-body">
+      <table class="table">
+        <thead>
+          <th>File Name</th>
+          <th>Action</th>
+        </thead>
+
+        <tbody>
+          {% if status["logs"] %}
+            {% for file_name in status["logs"] %}
+              <tr>
+                <td>{{ file_name }}</td>
+                <td>
+                  <button onclick="download_log('{{ file_name }}')" type="button" class="btn btn-info" >Download</button>
+                  <button onclick="delete_log('{{ file_name }}')" type="button" class="btn btn-danger" >Delete</button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

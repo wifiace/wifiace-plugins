@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+{% block title %} Tshark {% endblock %}
+
+{% block head %}
+<script>
+function download_log(file_name){
+  window.location = document.URL + "download/" + file_name;
+}
+
+function delete_log(file_name){
+  window.location = document.URL + "delete/" + file_name;
+}
+
+$(document).ready(function(){
+  $("#stop").click(function(){
+    window.location = document.URL + "stop";
+  });
+
+
+    $('#filter-file-model').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget)
+      var file_name = $(button).closest('tr').find('td:eq(0)').text();
+
+      var modal = $(this)
+      $('#file-name').val(file_name);
+    });
+
+    $('#filter-file-model').on('hide.bs.modal', function (event) {
+      $('#filter-msg').html('');
+    });
+
+    $("#pattern-src").click(function(){
+       var pattern = $("#pattern-tb").val();
+       var filename = $("#file-name").val();
+
+       $.ajax({
+       url: document.URL + 'grepfile',
+       data: {filename:filename, pattern:pattern},
+       type: 'GET',
+       beforeSend: function(){
+         $('#pattern-src').attr('disabled','disabled');
+       },
+       complete: function(){
+         $('#pattern-src').removeAttr('disabled');
+       },
+       success: function(response) {
+           $('#file-text').val(response["message"]);
+           console.log(response);
+       },
+       error: function(error) {
+           $('#filter-msg').html('<div class="alert alert-warning" role="alert">{message}</div>'.formatUnicorn({message:error.responseJSON["message"]}));
+           console.log(error);
+       }
+       });
+    });
+
+});
+
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h1>SSLstrip2</h1>
+</div>
+
+<div class="col-lg-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Control:</h3>
+    </div>
+    <div class="panel-body">
+    <div class="form-group">
+      <label>sslstrip : </label>
+      {% if status["pid"] == -1 %}
+        <span class="text-danger">not running</span>
+        <br><br>
+        <br>
+
+        <form method="POST" action="/plugins/SSLstrip2/start">
+
+         <div class="input-group">
+           <span class="input-group-addon">{{ form.log_option.label.text }}</span>
+           {{ form.log_option(class='form-control') }}
+         </div>
+         <br>
+         <div class="input-group">
+           <span class="input-group-addon">{{ form.port.label.text }}</span>
+           {{ form.port(class='form-control') }}
+         </div>
+          {{ form.favicon.label }} : {{ form.favicon }}
+          <br>
+          {{ form.killsessions.label }} : {{ form.killsessions }}
+
+          <br>
+
+          <br>
+
+         <input type="submit" class="btn btn-success btn-block" id="start" value="Start">
+        </form>
+      {% else %}
+        <span class="text-info">{{ status["pid"] }}</span>
+        <br><br>
+        <button type="button" class="btn btn-danger btn-block" id="stop" >Stop</button>
+      {% endif %}
+
+    </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="col-lg-12">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">History <span class="badge">{{ status["history_list"]|length }}</span> </h3>
+    </div>
+    <div class="panel-body">
+      <table class="table">
+        <thead>
+          <th>File Name</th>
+          <th>Action</th>
+        </thead>
+
+        <tbody>
+          {% if status["history_list"] %}
+            {% for file_name in status["history_list"] %}
+              <tr>
+                <td>{{ file_name }}</td>
+                <td>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#filter-file-model" >View</button>
+                  <button onclick="download_log('{{ file_name }}')" type="button" class="btn btn-info" >Download</button>
+                  <button onclick="delete_log('{{ file_name }}')" type="button" class="btn btn-danger" >Delete</button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="filter-file-model" tabindex="-1" role="dialog" aria-labelledby="filter-file-label">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="filter-file-label">Filter File</h4>
+      </div>
+      <div class="modal-body">
+        <div id="filter-msg"></div>
+
+        <div class="form-group">
+          <div class="input-group">
+            <span class="input-group-addon"> <i class="glyphicon glyphicon-file" aria-hidden="true"></i> </span>
+            <input id="file-name" class="form-control" type="text"  value="File Name" readonly>
+          </div>
+          <br>
+          <div class="input-group">
+            <span class="input-group-addon"> <i class="glyphicon glyphicon-search" aria-hidden="true"></i></span>
+            <input id="pattern-tb" class="form-control" type="text" placeholder="Pattern to search">
+            <span class="input-group-btn"><button id="pattern-src" type="button" class="btn btn-default"> Grep</button></span>
+          </div>
+          <br>
+          <label>Matched Content:</label>
+          <textarea id="file-text" class="form-control input-sm" rows="8" readonly></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

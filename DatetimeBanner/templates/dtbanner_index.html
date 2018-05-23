@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block title %} Dashboard {% endblock %}
+
+{% block head %}
+<script>
+  $(document).ready(function(){
+
+    $("#update-dt").click(function(){
+
+      $.ajax({
+      url: '/plugins/DatetimeBanner/get_datetime',
+      type: 'GET',
+
+      success: function(response) {
+          $("#show-dtb").text(response["message"]);
+          console.log(response);
+      },
+      error: function(error) {
+          console.log(error);
+      }
+
+      });
+
+    });
+  });
+</script>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h1>Banner<small>datetime</small></h1>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Show Datetime</h3>
+    </div>
+    <div class="panel-body">
+      <button type="button" class="btn btn-default" id="update-dt" >Update</button>
+      <br><br>
+      <div class="well well-lg">
+        <pre id="show-dtb">{{ banner_str }}</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
